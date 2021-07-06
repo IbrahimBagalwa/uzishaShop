@@ -35,6 +35,10 @@ const userSchema = mongoose.Schema({
     photo:{
         type:String,
         required:true
+    },
+    isAdmin:{
+        type:Boolean,
+        required:true
     }
 
 })
