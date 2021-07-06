@@ -20,5 +20,6 @@ const generatorToken = async ()=>{
     return token
 }
 export {
-    getToken
+    getToken,
+    generatorToken
 }

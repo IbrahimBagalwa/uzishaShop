@@ -1,10 +1,11 @@
  import userSchema from '../models/userModel';
  import bcrypt from 'bcrypt';
  import dotenv from 'dotenv';
- import { getToken } from '../middlewares/util';
+ import { generatorToken, getToken } from '../middlewares/util';
 import user from 'c:/users/abraham/desktop/api-m-auto/models/user';
 import formatDate from 'date-format';
 import base64ToImage from 'base64-to-image';
+import c from 'config';
 dotenv.config();
 
 const userCtrl = {
@@ -37,6 +38,24 @@ const userCtrl = {
         const {username, email, phone, photo, password, isAdmin} = req.body;
         password = await bcrypt.hash(password, 10);
         let photoName = 'defaul.jpg';
-        let created = f
+        let created = formatDate('yyy-MM-dd hh:mm:ss', new Date());
+        let date = formatDate('yyy-mm-dd-hh-MM-ss', new Date());
+
+        if (photo){
+            let token = await generatorToken();
+            let imageName = token + '-' + date;
+            photoName = imageName + '.jpg';
+
+            const base64Str = photo;
+            const pathLink = path.join(__dirname, '../public/uploads/images');
+            const optionalObj = {'fileName': imageName, 'type': 'jpg'};
+
+            var imageInfo = await base64ToImage(base64Str, pathLink, optionalObj);
+            if(imageInfo){
+                console.log('photo uploaded');
+            }else{
+                console.log('Error photo Upload')
+            }
+        }
     }
 }
