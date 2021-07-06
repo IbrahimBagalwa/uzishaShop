@@ -11,6 +11,25 @@ const userCtrl = {
         let result =  await user.findOne({
             phone : req.body.phone
         }).then().catch(err => console.error(er))
-        console.log("result", result)
+        
+        if(result){
+            const is_logged = await bcrypt.compare(req.body.password, result.password);
+            if(is_logged){
+                return res.status(200).json({
+                    status: 200,
+                    login:true,
+                    token: getToken(),
+                    user:{
+                        id: result.id,
+                        nom: result.nom,
+                        email: result.email
+                    }
+                });
+            }
+        }
+        res.status(401).json({
+            status:401,
+            msg: "impossible de vous connectez"
+        });
     }
 }
