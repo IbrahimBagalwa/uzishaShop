@@ -2,7 +2,6 @@
  import bcrypt from 'bcrypt';
  import dotenv from 'dotenv';
  import { generatorToken, getToken } from '../middlewares/util';
-import user from 'c:/users/abraham/desktop/api-m-auto/models/user';
 import formatDate from 'date-format';
 import base64ToImage from 'base64-to-image';
 import c from 'config';
@@ -23,7 +22,7 @@ const userCtrl = {
                     token: getToken(),
                     user:{
                         id: result.id,
-                        nom: result.nom,
+                        username: result.username,
                         email: result.email
                     }
                 });
@@ -57,5 +56,29 @@ const userCtrl = {
                 console.log('Error photo Upload')
             }
         }
+        const new_user = await new userSchema({
+            username,
+            email,
+            phone,
+            activated : 1,
+            password,
+            isAdmin,
+            photo : photoName,
+            created: created,
+            modified: created
+        })
+        new_user.save()
+        .then().catch(err => console.error(err));
+        if(new_user){
+            return res.status(200).json({
+                status: 200,
+                new_user
+            });
+        }
+        res.status(400).json({
+            status: 400,
+            msg: "Impossible d'enregister cette user"
+        });
     }
 }
+export default userCtrl;

@@ -16,11 +16,7 @@ const userSchema = mongoose.Schema({
         default:Date.now(),
         required:false
     },
-    nom:{
-        type:String,
-        required:true
-    },
-    prenom:{
+    username:{
         type:String,
         required:true
     },
@@ -36,12 +32,12 @@ const userSchema = mongoose.Schema({
         type:String,
         required:true
     },
-    photo:{
-        type:String,
-        required:true
-    },
     isAdmin:{
         type:Boolean,
+        required:true
+    },
+    photo:{
+        type:String,
         required:true
     }
 
