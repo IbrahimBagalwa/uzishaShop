@@ -15,7 +15,11 @@ const getToken = (user)=>{
         expiresIn:process.env.EXPIRE_TOKEN
     })
 }
-
+const generatorToken = async ()=>{
+    let token = randomstring.generate(20);
+    return token
+}
 export {
-    getToken
+    getToken,
+    generatorToken
 }
