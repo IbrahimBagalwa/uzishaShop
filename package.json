@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "api de pos",
   "main": "server.js",
-  "type": "module",
   "scripts": {
     "test": "node src/server.js --exec babel-node -e js",
-    "start": "nodemon src/server.js --exec babel-node -e js"
+    "start": "nodemon --watch src --exec babel-node src/server.js" 
   },
   "keywords": [
     "babel",
