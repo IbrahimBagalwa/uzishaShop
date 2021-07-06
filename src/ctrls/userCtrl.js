@@ -1,10 +1,10 @@
- import userSchema from '../models/userModel';
- import bcrypt from 'bcrypt';
- import dotenv from 'dotenv';
- import { generatorToken, getToken } from '../middlewares/util';
+import userSchema from '../models/userModel';
+import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+import { generatorToken, getToken } from '../middlewares/util';
 import formatDate from 'date-format';
 import base64ToImage from 'base64-to-image';
-import c from 'config';
+
 dotenv.config();
 
 const userCtrl = {
@@ -72,6 +72,7 @@ const userCtrl = {
         if(new_user){
             return res.status(200).json({
                 status: 200,
+                msg:"Enregistrement reussie",
                 new_user
             });
         }
