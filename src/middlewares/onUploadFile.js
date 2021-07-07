@@ -1,5 +1,5 @@
 import formidable from 'formidable';
-const onUploadFile = async (req,res)=>{
+const onUploadFiles = async (req,res)=>{
     const form = new formidable.IncomingForm();
     form.parse(req);
     form.on('fileBegin', (nom,file)=>{
@@ -19,4 +19,4 @@ const onUploadFile = async (req,res)=>{
     })
 }
 
-export {onUploadFile}
+export {onUploadFiles}
