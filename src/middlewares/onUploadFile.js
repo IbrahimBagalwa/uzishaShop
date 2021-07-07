@@ -18,3 +18,5 @@ const onUploadFile = async (req,res)=>{
         })
     })
 }
+
+export {onUploadFile}

@@ -5,6 +5,7 @@ import { generatorToken, getToken } from '../middlewares/util';
 import formatDate from 'date-format';
 import base64ToImage from 'base64-to-image';
 import { hash } from 'bcrypt';
+import formidable from 'formidable';
 
 dotenv.config();
 
@@ -34,82 +35,71 @@ const userCtrl = {
             msg: "impossible de vous connectez"
         });
     },
-
-    onUploadFile: async (req,res)=>{
-        const form = new formidable.IncomingForm();
-        form.parse(req);
-        form.on('fileBegin', (nom,file)=>{
-            file.path = __dirname + '../public/uploads/images/' + file.nom
-        });
-        form.on('file', (nom, file)=>{
-            res.status(200).json({
-                status: 200, 
-                msg:'photo uploaded'
-            })
-        });
-        process.on('uncaughtException',err =>{
-            res.status(500).json({
-                status:500,
-                msg: "Error to upload photo",err
-            })
-        })
-    },
-    
     userRegister: async (req, res) =>{
-        const {username, email, phone, photo, password, isAdmin} = req.body;
-        let photoName = 'defaul.jpg';
-        let created = formatDate('yyy-MM-dd hh:mm:ss', new Date());
-        let date = formatDate('yyy-mm-dd-hh-MM-ss', new Date());
-        if (photo){
-            let token = await generatorToken();
-            let imageName = token + '-' + date;
-            photoName = imageName + '.jpg';
-
-            const base64Str = photo;
-            const pathLink = path.join(__dirname, '../public/uploads/images');
-            const optionalObj = {'fileName': imageName, 'type': 'jpg'};
-
-            var imageInfo = await base64ToImage(base64Str, pathLink, optionalObj);
-            if(imageInfo){
-                console.log('photo uploaded');
+        const form = new formidable.IncomingForm({ multiples:false});
+        form.parse(req,(err,fields, files)=>{
+            if(err){
+                next(err);
+                return;
             }else{
-                console.log('Error photo Upload')
-            }
-        }
-        const newUser = await new userSchema({
-            username,
-            email,
-            phone,
-            activated : 1,
-            password,
-            isAdmin,
-            photo : photoName,
-            created: created,
-            modified: created
-        });
-        bcrypt.genSalt(10, (err, salt)=>{
-            bcrypt.hash(password,hash, (err, salt)=>{
-                if(err){
-                    return res.status(503).json({
-                        status: 503,
-                        msg: err
-                    })
+                const toPath= ( !files['photo']['nom'] ? files['photo']['nom']:'default.jpg');
+                const {username, email, phone, password, isAdmin} = fields;
+                let photoName = toPath;
+                let created = formatDate('yyy-MM-dd hh:mm:ss', new Date());
+                let date = formatDate('yyy-mm-dd-hh-MM-ss', new Date());
+                if (photo){
+                    let token = await generatorToken();
+                    let imageName = token + '-' + date;
+                    photoName = imageName + '.jpg';
+
+                    const base64Str = photo;
+                    const pathLink = path.join(__dirname, '../public/uploads/images');
+                    const optionalObj = {'fileName': imageName, 'type': 'jpg'};
+
+                    var imageInfo = await base64ToImage(base64Str, pathLink, optionalObj);
+                    if(imageInfo){
+                        console.log('photo uploaded');
+                    }else{
+                        console.log('Error photo Upload')
+                    }
                 }
-                newUser.password - hash;
-                newUser.save((err, user)=>{
+            const newUser = await new userSchema({
+                username,
+                email,
+                phone,
+                activated : 1,
+                password,
+                isAdmin,
+                photo : photoName,
+                created: created,
+                modified: created
+            });
+            bcrypt.genSalt(10, (err, salt)=>{
+                bcrypt.hash(password,hash, (err, salt)=>{
                     if(err){
                         return res.status(503).json({
                             status: 503,
-                            msg: "impossible d'enregistre cet user",err
+                            msg: err
                         })
                     }
-                    res.status(200).json({
-                        status: 200,
-                        msg: 'Enregistrement avec success'
+                    newUser.password - hash;
+                    newUser.save((err, user)=>{
+                        if(err){
+                            return res.status(503).json({
+                                status: 503,
+                                msg: "impossible d'enregistre cet user",err
+                            })
+                        }
+                        res.status(200).json({
+                            status: 200,
+                            msg: 'Enregistrement avec success'
+                        })
                     })
                 })
             })
-        })
+        }
+    })
+        
     },
     getUser :async (req,res)=>{
         const data = await userSchema.find();
