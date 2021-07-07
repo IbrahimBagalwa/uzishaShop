@@ -1,15 +1,16 @@
 import userSchema from '../models/userModel';
-import bcrypt from 'bcrypt';
+// import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 import { generatorToken, getToken } from '../middlewares/util';
 import formatDate from 'date-format';
 import base64ToImage from 'base64-to-image';
+import { hash } from 'bcrypt';
 
 dotenv.config();
 
 const userCtrl = {
     userLogin: async (req, res)=>{
-        let result =  await user.findOne({
+        let result =  await userSchema.findOne({
             phone : req.body.phone
         }).then().catch(err => console.error(er))
         
@@ -35,11 +36,9 @@ const userCtrl = {
     },
     userRegister: async (req, res) =>{
         const {username, email, phone, photo, password, isAdmin} = req.body;
-        password = await bcrypt.hash(password, 10);
         let photoName = 'defaul.jpg';
         let created = formatDate('yyy-MM-dd hh:mm:ss', new Date());
         let date = formatDate('yyy-mm-dd-hh-MM-ss', new Date());
-
         if (photo){
             let token = await generatorToken();
             let imageName = token + '-' + date;
@@ -56,7 +55,7 @@ const userCtrl = {
                 console.log('Error photo Upload')
             }
         }
-        const new_user = await new userSchema({
+        const newUser = await new userSchema({
             username,
             email,
             phone,
@@ -66,20 +65,44 @@ const userCtrl = {
             photo : photoName,
             created: created,
             modified: created
+        });
+        bcrypt.genSalt(10, (err, salt)=>{
+            bcrypt.hash(password,hash, (err, salt)=>{
+                if(err){
+                    return res.status(503).json({
+                        status: 503,
+                        msg: err
+                    })
+                }
+                newUser.password - hash;
+                newUser.save((err, user)=>{
+                    if(err){
+                        return res.status(503).json({
+                            status: 503,
+                            msg: "impossible d'enregistre cet user",err
+                        })
+                    }
+                    res.status(200).json({
+                        status: 200,
+                        msg: 'Enregistrement avec success'
+                    })
+                })
+            })
         })
-        new_user.save()
-        .then().catch(err => console.error(err));
-        if(new_user){
+    },
+    getUser :async (req,res)=>{
+        const data = await userSchema.find();
+        if(data){
             return res.status(200).json({
                 status: 200,
-                msg:"Enregistrement reussie",
-                new_user
-            });
+                msg: "la liste des users: ",
+                data
+            })
         }
         res.status(400).json({
             status: 400,
-            msg: "Impossible d'enregister cette user"
-        });
+            msg: 'Erreur lors de chargement de la liste des users'
+        })
     }
 }
 export default userCtrl;

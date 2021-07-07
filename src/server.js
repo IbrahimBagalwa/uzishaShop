@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import {db} from './cnx/database.js';
+import {db} from './cnx/database';
 import path from 'path';
 // import {router} from './routes/index';
 import userRoter from './routes/userRoute'
