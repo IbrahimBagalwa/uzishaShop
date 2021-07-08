@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-
+import randomstring from 'randomstring'
 dotenv.config();
 
 const getToken = (user)=>{
