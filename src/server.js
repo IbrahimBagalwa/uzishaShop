@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import {db} from './cnx/database';
 import path from 'path';
-// import {router} from './routes/index';
+import fileUpload from 'express-fileupload';
 import userRoter from './routes/userRoute'
 
 dotenv.config();
@@ -15,7 +15,7 @@ app.use(cors());
 
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
-
+app.use(fileUpload())
 app.use('/api/user', userRoter)
 
 app.get('/',(req,res,next)=>{
@@ -23,7 +23,7 @@ app.get('/',(req,res,next)=>{
         status : 200,
         message : 'Welcome to UZISHA SHOP'});
 })
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, '/src/public')))
 
 app.use('**', (req,res,next)=>{
     res.status(200).send({status:405, msg:"Request not found on the server"})

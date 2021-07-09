@@ -3,11 +3,10 @@ import userSchema from '../models/userModel';
 import dotenv from 'dotenv';
 import { generatorToken, getToken } from '../middlewares/util';
 import formatDate from 'date-format';
-import base64ToImage from 'base64-to-image';
-import { hash } from 'bcrypt';
-import formidable from 'formidable';
-import bcrypt from 'bcrypt'
-
+import fileUpload from 'express-fileupload';
+import bcrypt from 'bcrypt';
+import path from 'path';
+import util from 'util'
 dotenv.config();
 
 const userCtrl = {
@@ -36,76 +35,59 @@ const userCtrl = {
             msg: "impossible de vous connectez"
         });
     },
-    onUploadFiles: async (req,res)=>{
-        const form = new formidable.IncomingForm();
-        form.parse(req);
-        form.on('fileBegin', (nom,file)=>{
-            file.path = __dirname + '../public/uploads/images/' + file.nom
-        });
-        form.on('file', (nom, file)=>{
-            return res.status(200).json({
-                status: 200, 
-                msg:'photo uploaded'
+
+    userRegister: async (req,res)=>{
+        const {username,email,phone,password,photo, isAdmin} = req.body;
+
+        
+            let file = req.files.photo;
+            const url = '/images' + file;
+            await file.mv('../public/uploads' + url, (err)=>{
+                if(err){
+                    res.json({msg:'erreur to uploaded image'})
+                }
+                res.json({msg:"image uploaded"})
             })
-        });
-        process.on('uncaughtException',err =>{
-            return res.status(500).json({
-                status:500,
-                msg: "Error to upload photo",err
-            })
+       
+        
+        let created = formatDate('yyyy-MM-dd hh:mm:ss', new Date());
+
+        const newUser = await new userSchema({
+            username, 
+            email, 
+            phone, 
+            password, 
+            photo: file,
+            isAdmin,
+            created:created,
+            modified: created
         })
-    },
-    userRegister : (req,res)=>{
-        const form = new formidable.IncomingForm({ multiples:false});
-        form.parse(req,(err,fields, files)=>{
-            if(err){
-                res.json(err)
-            }else{
-                const pathLink= ( !files['photo']['nom'] ? files['photo']['nom']:'default.jpg');
-                const {username, email, phone,password,isAdmin,photo} = fields;
-                // let pswd =  bcrypt.hash(password, process.env.KEY_LENGTH);
-                let created = formatDate('yyy-MM-dd hh:mm:ss', new Date());
-                if(username !==undefined && email !==undefined && phone !==undefined && password !==undefined && isAdmin !==undefined){
-                    const newUser = new userSchema({
-                    username,
-                    email,
-                    phone,
-                    password,
-                    isAdmin,
-                    photo :pathLink,
-                    created: created,
-                    modified: created
-                });
-                bcrypt.genSalt(10,(err,salt)=>{
-                    bcrypt.hash(password,salt,(err,hash)=>{
-                        if(err){
-                            res.status(503).json({msg:err});
-                            return;
-                        }
-                        newUser.password = hash
-                        newUser.save((err,user)=>{
-                            if(err)
-                            {
-                                res.status(503).json({status:503,msg:err});
-                                return;
-                            }
-                            res.status(200).json({status:200,msg:'Enregistrement reussi', user})
-                        })
-                        console.log(username,email,password,phone,phone)
+        bcrypt.genSalt(10, (err,salt)=>{
+            bcrypt.hash(password,salt,(err,hash)=>{
+                if(err){
+                    res.status(503).json({
+                        status: 503,
+                        msg:err
+                    });
+                    return;
+                }
+                newUser.password = hash
+                newUser.save((err, user)=>{
+                    if(err){
+                        res.status(503).json({
+                            status:503,
+                            msg:err
+                        });
+                        return;
+                    }
+                    res.status(200).json({
+                        status: 200,
+                        msg: 'Enregistrement avec succcess', 
+                        user
                     })
                 })
-                }else {
-                    console.log("-----------------------------",email, username, password,phone,photo,isAdmin, "----------------------")
-                    return res.status(405).json({
-                        status: 405,
-                        mssg: 'Veillez completez tous les champs',
-                        
-                    })
-            }
-                   
-        }
-    })
-        
+            })
+        })
     },
     getUser :async (req,res)=>{
         const data = await userSchema.find();
