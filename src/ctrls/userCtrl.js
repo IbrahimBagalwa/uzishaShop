@@ -38,26 +38,36 @@ const userCtrl = {
 
     userRegister: async (req,res)=>{
         const {username,email,phone,password,photo, isAdmin} = req.body;
-
-        
-            let file = req.files.photo;
-            const url = '/images' + file;
-            await file.mv('../public/uploads' + url, (err)=>{
-                if(err){
-                    res.json({msg:'erreur to uploaded image'})
-                }
-                res.json({msg:"image uploaded"})
-            })
-       
-        
         let created = formatDate('yyyy-MM-dd hh:mm:ss', new Date());
 
-        const newUser = await new userSchema({
+            let file = req.files.photo;
+            const _fs = (filename) => {
+                var rnd = (Math.floor(Math.random() * 100) + (new Date().getMilliseconds())).toString()
+                // rnd.concat()
+                return `${rnd}${filename.substring(filename.lastIndexOf('.'))}`;
+            }
+            const url = _fs(file.name);
+            const uploadFiles = (url, cb)=>{
+             file.mv('src/public/uploads/images/' + url, (err)=>{
+                if(err) {
+                    console.log(({msg:'erreur to uploaded image', err: err}))
+                    cb('error', undefined)
+                }
+                else cb(undefined, 'success')
+            })
+            
+            }
+        await uploadFiles(url, (err, succ) => {
+
+            if(err) res.status(500).json({status: 500, message: "erreur "})
+            else{
+                
+        const newUser = new userSchema({
             username, 
             email, 
             phone, 
             password, 
-            photo: file,
+            photo: url,
             isAdmin,
             created:created,
             modified: created
@@ -78,6 +88,7 @@ const userCtrl = {
                             status:503,
                             msg:err
                         });
+                        console.log(username,email,password,phone,file,isAdmin)
                         return;
                     }
                     res.status(200).json({
@@ -88,6 +99,10 @@ const userCtrl = {
                 })
             })
         })
+            }
+        })
+
+
     },
     getUser :async (req,res)=>{
         const data = await userSchema.find();
